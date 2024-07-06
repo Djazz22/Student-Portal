@@ -1,142 +1,81 @@
-const students = [
-    {
-        id: 1,
-        firstName: 'Avi',
-        lastName: 'Vashishta',
-        email: 'avi@gmail.com',
-        marks: 85,
-        passing: true,
-        class: 12,
-        gender: 'Male'
-    },
-   
-    // Add more student objects here...
-];
-
 document.addEventListener('DOMContentLoaded', () => {
-    renderTable(students);
-});
+    let students = [];
+    let filteredStudents = [];
 
-function renderTable(data) {
-    const tableContainer = document.getElementById('table-container');
-    tableContainer.innerHTML = '';
-    
-    const table = document.createElement('table');
-    const thead = document.createElement('thead');
-    const tbody = document.createElement('tbody');
-    
-    // Create table headers
-    const headers = ['ID', 'Name', 'Gender', 'Class', 'Marks', 'Passing', 'Email'];
-    const tr = document.createElement('tr');
-    headers.forEach(header => {
-        const th = document.createElement('th');
-        th.textContent = header;
-        tr.appendChild(th);
-    });
-    thead.appendChild(tr);
-    
-    // Create table rows
-    data.forEach(student => {
-        const tr = document.createElement('tr');
-        
-        // ID
-        const tdId = document.createElement('td');
-        tdId.textContent = student.id;
-        tr.appendChild(tdId);
-        
-        // Name
-        const tdName = document.createElement('td');
-        tdName.textContent = `${student.firstName} ${student.lastName}`;
-        tr.appendChild(tdName);
-        
-        // Gender
-        const tdGender = document.createElement('td');
-        tdGender.textContent = student.gender;
-        tr.appendChild(tdGender);
-        
-        // Class
-        const tdClass = document.createElement('td');
-        tdClass.textContent = student.class;
-        tr.appendChild(tdClass);
-        
-        // Marks
-        const tdMarks = document.createElement('td');
-        tdMarks.textContent = student.marks;
-        tr.appendChild(tdMarks);
-        
-        // Passing
-        const tdPassing = document.createElement('td');
-        tdPassing.textContent = student.passing ? 'Passing' : 'Failed';
-        tr.appendChild(tdPassing);
-        
-        // Email
-        const tdEmail = document.createElement('td');
-        tdEmail.textContent = student.email;
-        tr.appendChild(tdEmail);
-        
-        tbody.appendChild(tr);
-    });
-    
-    table.appendChild(thead);
-    table.appendChild(tbody);
-    tableContainer.appendChild(table);
-
-    // Ensure table structure is displayed even if it's empty
-    if (data.length === 0) {
-        const tr = document.createElement('tr');
-        headers.forEach(() => {
-            const td = document.createElement('td');
-            tr.appendChild(td);
+    fetch('data.json')
+        .then(response => response.json())
+        .then(data => {
+            students = data;
+            filteredStudents = students;
+            displayStudents(filteredStudents);
         });
-        tbody.appendChild(tr);
+
+    function displayStudents(data) {
+        const tbody = document.querySelector('#studentTable tbody');
+        tbody.innerHTML = '';
+        data.forEach(student => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${student.id}</td>
+                <td>${student.firstName} ${student.lastName}</td>
+                <td>${student.email}</td>
+                <td>${student.class}</td>
+                <td>${student.marks}</td>
+                <td>${student.passing ? 'Passing' : 'Failed'}</td>
+                <td>${student.gender}</td>
+            `;
+            tbody.appendChild(row);
+        });
     }
-}
 
-function search() {
-    const query = document.getElementById('searchBar').value.toLowerCase();
-    const filteredStudents = students.filter(student => 
-        student.firstName.toLowerCase().includes(query) ||
-        student.lastName.toLowerCase().includes(query) ||
-        student.email.toLowerCase().includes(query)
-    );
-    renderTable(filteredStudents);
-}
+    function handleSearch() {
+        const query = document.getElementById('search').value.toLowerCase();
+        filteredStudents = students.filter(student =>
+            student.firstName.toLowerCase().includes(query) ||
+            student.lastName.toLowerCase().includes(query) ||
+            student.email.toLowerCase().includes(query)
+        );
+        displayStudents(filteredStudents);
+    }
 
-function sortByNameAZ() {
-    const sortedStudents = [...students].sort((a, b) => 
-        (a.firstName + ' ' + a.lastName).localeCompare(b.firstName + ' ' + b.lastName)
-    );
-    renderTable(sortedStudents);
-}
+    function sortByName(order = 'asc') {
+        filteredStudents.sort((a, b) => {
+            const nameA = `${a.firstName} ${a.lastName}`.toLowerCase();
+            const nameB = `${b.firstName} ${b.lastName}`.toLowerCase();
+            if (nameA < nameB) return order === 'asc' ? -1 : 1;
+            if (nameA > nameB) return order === 'asc' ? 1 : -1;
+            return 0;
+        });
+        displayStudents(filteredStudents);
+    }
 
-function sortByNameZA() {
-    const sortedStudents = [...students].sort((a, b) => 
-        (b.firstName + ' ' + b.lastName).localeCompare(a.firstName + ' ' + a.lastName)
-    );
-    renderTable(sortedStudents);
-}
+    function sortByMarks() {
+        filteredStudents.sort((a, b) => a.marks - b.marks);
+        displayStudents(filteredStudents);
+    }
 
-function sortByMarks() {
-    const sortedStudents = [...students].sort((a, b) => a.marks - b.marks);
-    renderTable(sortedStudents);
-}
+    function filterPassing() {
+        filteredStudents = students.filter(student => student.passing);
+        displayStudents(filteredStudents);
+    }
 
-function sortByPassing() {
-    const passingStudents = students.filter(student => student.passing);
-    renderTable(passingStudents);
-}
+    function sortByClass() {
+        filteredStudents.sort((a, b) => a.class - b.class);
+        displayStudents(filteredStudents);
+    }
 
-function sortByClass() {
-    const sortedStudents = [...students].sort((a, b) => a.class - b.class);
-    renderTable(sortedStudents);
-}
+    function sortByGender() {
+        const males = filteredStudents.filter(student => student.gender === 'Male');
+        const females = filteredStudents.filter(student => student.gender === 'Female');
+        displayStudents([...males, ...females]);
+    }
 
-function sortByGender() {
-    const maleStudents = students.filter(student => student.gender === 'male');
-    const femaleStudents = students.filter(student => student.gender === 'female');
-    
-    renderTable(maleStudents);
-    const tableContainer = document.getElementById('table-container');
-    tableContainer.innerHTML += '<br/><h2>Female Students</h2>';
-    renderTable(femaleStudents);
-}
+    document.getElementById('search').addEventListener('input', handleSearch);
+    document.getElementById('searchButton').addEventListener('click', handleSearch);
+    document.getElementById('sortAZ').addEventListener('click', () => sortByName('asc'));
+    document.getElementById('sortZA').addEventListener('click', () => sortByName('desc'));
+    document.getElementById('sortMarks').addEventListener('click', sortByMarks);
+    document.getElementById('filterPassing').addEventListener('click', filterPassing);
+    document.getElementById('sortClass').addEventListener('click', sortByClass);
+    document.getElementById('sortGender').addEventListener('click', sortByGender);
+});
